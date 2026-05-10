@@ -23,8 +23,8 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Puppeteer
-        run: npm install puppeteer
+      - name: Install Dependencies
+        run: npm install
 
       - name: Run Script
         run: node fetch.js
