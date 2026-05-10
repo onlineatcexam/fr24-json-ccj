@@ -63,7 +63,7 @@ if (!fs.existsSync('tracks/arrivals')) {
       -1,
       'arrivals_page2.json'
     );
-
+/*
     // DEPARTURES
 
     await fetchAndSave(
@@ -77,7 +77,8 @@ if (!fs.existsSync('tracks/arrivals')) {
       -1,
       'departures_page2.json'
     );
-
+*/
+    
 // Process landed arrivals
 
 const arrivals1 =
