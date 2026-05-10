@@ -179,7 +179,7 @@ const ACCESS_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJmbGlnaHRyY
       'departures/page2.json'
     );
 
-
+    /*
     // =========================================================
     // FETCH GROUND SCHEDULE
     // =========================================================
@@ -189,7 +189,7 @@ const ACCESS_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJmbGlnaHRyY
         1,
         'ground.json'
       );
-
+    */
     
     // =========================================================
     // PROCESS ARRIVALS
