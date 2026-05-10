@@ -18,21 +18,54 @@ const fs = require('fs');
 
     const ts = Math.floor(Date.now() / 1000);
 
-   const url =
-  `https://api.flightradar24.com/common/v1/airport.json?code=CCJ&plugin[]=&plugin-setting[schedule][mode]=arrivals&plugin-setting[schedule][timestamp]=${ts}&page=-1&limit=100&fleet=&token=`;
-    console.log("Opening URL...");
-    console.log(url);
+    async function fetchAndSave(mode, pageNo, filename) {
 
-    await page.goto(url, {
-      waitUntil: 'networkidle2',
-      timeout: 60000
-    });
+      const url =
+        `https://api.flightradar24.com/common/v1/airport.json?code=CCJ&plugin[]=&plugin-setting[schedule][mode]=${mode}&plugin-setting[schedule][timestamp]=${ts}&page=${pageNo}&limit=100&fleet=&token=`;
 
-    const text = await page.evaluate(() => document.body.innerText);
+      console.log("Fetching:", filename);
 
-    console.log(text.substring(0, 500));
+      await page.goto(url, {
+        waitUntil: 'networkidle2',
+        timeout: 60000
+      });
 
-    fs.writeFileSync('data.json', text);
+      const text =
+        await page.evaluate(() => document.body.innerText);
+
+      JSON.parse(text);
+
+      fs.writeFileSync(filename, text);
+
+    }
+
+    // ARRIVALS
+
+    await fetchAndSave(
+      'arrivals',
+      1,
+      'arrivals_page1.json'
+    );
+
+    await fetchAndSave(
+      'arrivals',
+      -1,
+      'arrivals_page2.json'
+    );
+
+    // DEPARTURES
+
+    await fetchAndSave(
+      'departures',
+      1,
+      'departures_page1.json'
+    );
+
+    await fetchAndSave(
+      'departures',
+      -1,
+      'departures_page2.json'
+    );
 
     await browser.close();
 
@@ -41,6 +74,7 @@ const fs = require('fs');
   } catch (err) {
 
     console.error(err);
+
     process.exit(1);
 
   }
