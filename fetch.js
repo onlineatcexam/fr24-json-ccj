@@ -89,7 +89,7 @@ const fs = require('fs');
     async function fetchTrack(flightId, type) {
 
       const filePath =
-        `tracks/${type}/${flightId}.json`;
+        `tracks/${flightId}.json`;
 
       // Skip if already exists
 
