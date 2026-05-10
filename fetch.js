@@ -1,5 +1,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
+const ACCESS_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJmbGlnaHRyYWRhcjI0LmNvbSIsImV4cCI6MTc4MTAyNzI3OCwiaWF0IjoxNzc4NDM1Mjc4LCJlbWFpbCI6InNoYWhhYnBrQGdtYWlsLmNvbSIsInVzZXJJZCI6MTAzMjgyNzksImtleVNlc3Npb24iOiIiLCJzbCI6IkMiLCJhbCI6IjAiLCJwayI6IiJ9.qNtoYgZbQ3IhfrcDq5iyP_sZHXw5ox0H7RvAlaRrXZo';
+
 
 (async () => {
 
@@ -58,7 +60,7 @@ const fs = require('fs');
     async function fetchAndSave(mode, pageNo, filename) {
 
       const url =
-        `https://api.flightradar24.com/common/v1/airport.json?code=CCJ&plugin[]=&plugin-setting[schedule][mode]=${mode}&plugin-setting[schedule][timestamp]=${ts}&page=${pageNo}&limit=100&fleet=&token=`;
+        `https://api.flightradar24.com/common/v1/airport.json?code=CCJ&plugin[]=&plugin-setting[schedule][mode]=${mode}&plugin-setting[schedule][timestamp]=${ts}&page=${pageNo}&limit=100&fleet=&token=${ACCESS_TOKEN}`;
 
       console.log(`Fetching ${filename}`);
 
