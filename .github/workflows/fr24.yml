@@ -2,7 +2,7 @@ name: FR24 Fetch
 
 on:
   schedule:
-    - cron: '*/15 * * * *'
+    - cron: '*/30 * * * *'
 
   workflow_dispatch:
 
@@ -24,13 +24,12 @@ jobs:
           node-version: 22
 
       - name: Install Dependencies
-        run: npm install
+        run: |
+          npm install
+          npx puppeteer browsers install chrome
 
       - name: Run Script
         run: node fetch.js
-
-      - name: Check files
-        run: ls -la
 
       - name: Commit and Push
         run: |
