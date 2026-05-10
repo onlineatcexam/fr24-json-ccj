@@ -1,20 +1,42 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
-const path = require('path');
-
-
-if (!fs.existsSync('tracks')) {
-  fs.mkdirSync('tracks');
-}
-
-if (!fs.existsSync('tracks/arrivals')) {
-  fs.mkdirSync('tracks/arrivals');
-}
-
 
 (async () => {
 
   try {
+
+    // -----------------------------
+    // CREATE FOLDERS IF NOT EXIST
+    // -----------------------------
+
+    const folders = [
+      'arrivals',
+      'departures',
+      'tracks',
+      'tracks/arrivals',
+      'tracks/departures'
+    ];
+
+    folders.forEach(folder => {
+
+      if (!fs.existsSync(folder)) {
+
+        fs.mkdirSync(folder);
+
+      }
+
+    });
+
+    // -----------------------------
+    // STATS
+    // -----------------------------
+
+    let fetchedCount = 0;
+    let skippedCount = 0;
+
+    // -----------------------------
+    // START BROWSER
+    // -----------------------------
 
     const browser = await puppeteer.launch({
       headless: true,
@@ -29,12 +51,16 @@ if (!fs.existsSync('tracks/arrivals')) {
 
     const ts = Math.floor(Date.now() / 1000);
 
+    // -----------------------------
+    // FETCH AND SAVE SCHEDULE JSON
+    // -----------------------------
+
     async function fetchAndSave(mode, pageNo, filename) {
 
       const url =
         `https://api.flightradar24.com/common/v1/airport.json?code=CCJ&plugin[]=&plugin-setting[schedule][mode]=${mode}&plugin-setting[schedule][timestamp]=${ts}&page=${pageNo}&limit=100&fleet=&token=`;
 
-      console.log("Fetching:", filename);
+      console.log(`Fetching ${filename}`);
 
       await page.goto(url, {
         waitUntil: 'networkidle2',
@@ -44,132 +70,223 @@ if (!fs.existsSync('tracks/arrivals')) {
       const text =
         await page.evaluate(() => document.body.innerText);
 
+      // Validate JSON
+
       JSON.parse(text);
 
       fs.writeFileSync(filename, text);
 
+      console.log(`Saved ${filename}`);
+
+      await new Promise(r => setTimeout(r, 2000));
+
     }
 
-    // ARRIVALS
+    // -----------------------------
+    // FETCH TRACK
+    // -----------------------------
+
+    async function fetchTrack(flightId, type) {
+
+      const filePath =
+        `tracks/${type}/${flightId}.json`;
+
+      // Skip if already exists
+
+      if (fs.existsSync(filePath)) {
+
+        console.log(`SKIP ${type}: ${flightId}`);
+
+        skippedCount++;
+
+        return;
+
+      }
+
+      console.log(`FETCH ${type}: ${flightId}`);
+
+      const trackUrl =
+        `https://api.flightradar24.com/common/v1/flight-playback.json?flightId=${flightId}&timestamp=${ts}`;
+
+      await page.goto(trackUrl, {
+        waitUntil: 'networkidle2',
+        timeout: 60000
+      });
+
+      const text =
+        await page.evaluate(() => document.body.innerText);
+
+      // Detect Cloudflare block
+
+      if (
+        text.includes('Just a moment') ||
+        text.includes('<html')
+      ) {
+
+        console.log(`BLOCKED ${flightId}`);
+
+        return;
+
+      }
+
+      // Validate JSON
+
+      JSON.parse(text);
+
+      fs.writeFileSync(filePath, text);
+
+      console.log(`SAVED ${type}: ${flightId}`);
+
+      fetchedCount++;
+
+      // Delay between track requests
+
+      await new Promise(r => setTimeout(r, 3000));
+
+    }
+
+    // =========================================================
+    // FETCH ARRIVALS SCHEDULES
+    // =========================================================
 
     await fetchAndSave(
       'arrivals',
       1,
-      'arrivals_page1.json'
+      'arrivals/page1.json'
     );
 
     await fetchAndSave(
       'arrivals',
       -1,
-      'arrivals_page2.json'
+      'arrivals/page2.json'
     );
-/*
-    // DEPARTURES
+
+    // =========================================================
+    // FETCH DEPARTURES SCHEDULES
+    // =========================================================
 
     await fetchAndSave(
       'departures',
       1,
-      'departures_page1.json'
+      'departures/page1.json'
     );
 
     await fetchAndSave(
       'departures',
       -1,
-      'departures_page2.json'
+      'departures/page2.json'
     );
-*/
-    
-// Process landed arrivals
 
-const arrivals1 =
-  JSON.parse(
-    fs.readFileSync('arrivals_page1.json')
-  );
+    // =========================================================
+    // PROCESS ARRIVALS
+    // =========================================================
 
-const arrivals2 =
-  JSON.parse(
-    fs.readFileSync('arrivals_page2.json')
-  );
+    console.log('PROCESSING ARRIVALS');
 
-const combinedArrivals = [
+    const arrivals1 =
+      JSON.parse(
+        fs.readFileSync('arrivals/page1.json')
+      );
 
-  ...arrivals1.result.response.airport.pluginData.schedule.arrivals.data,
+    const arrivals2 =
+      JSON.parse(
+        fs.readFileSync('arrivals/page2.json')
+      );
 
-  ...arrivals2.result.response.airport.pluginData.schedule.arrivals.data
+    const combinedArrivals = [
 
-];
+      ...arrivals1.result.response.airport.pluginData.schedule.arrivals.data,
 
-// Only landed flights
+      ...arrivals2.result.response.airport.pluginData.schedule.arrivals.data
 
-for (const obj of combinedArrivals) {
+    ];
 
-  const status =
-    obj.flight.status.text || '';
+    for (const obj of combinedArrivals) {
 
-  if (status.startsWith('Landed')) {
+      const status =
+        obj.flight.status.text || '';
 
-    const flightId =
-      obj.flight.identification.id;
+      // Only landed flights
 
-    if (flightId) {
+      if (status.startsWith('Landed')) {
 
-      await fetchTrack(flightId);
+        const flightId =
+          obj.flight.identification.id;
+
+        if (!flightId) continue;
+
+        await fetchTrack(
+          flightId,
+          'arrivals'
+        );
+
+      }
 
     }
 
-  }
+    // =========================================================
+    // PROCESS DEPARTURES
+    // =========================================================
 
-}
+    console.log('PROCESSING DEPARTURES');
 
+    const departures1 =
+      JSON.parse(
+        fs.readFileSync('departures/page1.json')
+      );
 
-    
-  async function fetchTrack(flightId) {
+    const departures2 =
+      JSON.parse(
+        fs.readFileSync('departures/page2.json')
+      );
 
-  const filePath =
-    `tracks/arrivals/${flightId}.json`;
+    const combinedDepartures = [
 
-  // Skip if already exists
+      ...departures1.result.response.airport.pluginData.schedule.departures.data,
 
-  if (fs.existsSync(filePath)) {
+      ...departures2.result.response.airport.pluginData.schedule.departures.data
 
-    console.log(`Track exists: ${flightId}`);
+    ];
 
-    return;
+    for (const obj of combinedDepartures) {
 
-  }
+      const genericStatus =
+        obj.flight.status.generic.status.text || '';
 
-  console.log(`Fetching track: ${flightId}`);
+      // Only departed flights
 
-  const trackUrl =
-    `https://api.flightradar24.com/common/v1/flight-playback.json?flightId=${flightId}&timestamp=${ts}`;
+      if (genericStatus === 'departed') {
 
-  await page.goto(trackUrl, {
-    waitUntil: 'networkidle2',
-    timeout: 60000
-  });
+        const flightId =
+          obj.flight.identification.id;
 
-  const text =
-    await page.evaluate(() => document.body.innerText);
+        if (!flightId) continue;
 
-  // Validate JSON
+        await fetchTrack(
+          flightId,
+          'departures'
+        );
 
-  JSON.parse(text);
+      }
 
-  fs.writeFileSync(filePath, text);
+    }
 
-  console.log(`Saved: ${flightId}`);
+    // =========================================================
+    // SUMMARY
+    // =========================================================
 
-  // Small delay
+    console.log('========================');
+    console.log(`FETCHED : ${fetchedCount}`);
+    console.log(`SKIPPED : ${skippedCount}`);
+    console.log('========================');
 
-  await new Promise(r => setTimeout(r, 3000));
-
-}
     await browser.close();
 
-    console.log("Done");
+    console.log('DONE');
 
   } catch (err) {
 
+    console.error('SCRIPT FAILED');
     console.error(err);
 
     process.exit(1);
