@@ -18,9 +18,8 @@ const fs = require('fs');
 
     const ts = Math.floor(Date.now() / 1000);
 
-    const url =
-      `https://api.flightradar24.com/common/v1/airport.json?code=CCJ&plugin[]=schedule&plugin-setting[schedule][mode]=arrivals&plugin-setting[schedule][timestamp]=${ts}&page=1&limit=100&token=`;
-
+   const url =
+  `https://api.flightradar24.com/common/v1/airport.json?code=CCJ&plugin[]=&plugin-setting[schedule][mode]=arrivals&plugin-setting[schedule][timestamp]=${ts}&page=-1&limit=100&fleet=&token=`;
     console.log("Opening URL...");
     console.log(url);
 
