@@ -1,4 +1,7 @@
 name: FR24 Fetch
+concurrency:
+  group: fr24-fetch
+  cancel-in-progress: true
 
 on:
   schedule:
