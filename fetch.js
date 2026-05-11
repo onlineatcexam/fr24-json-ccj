@@ -84,11 +84,15 @@ const ACCESS_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJmbGlnaHRyY
 
     }
 
-    // -----------------------------
+ // -----------------------------
 // FETCH TRACK
 // -----------------------------
 
-async function fetchTrack(flightId, type) {
+async function fetchTrack(
+  flightId,
+  type,
+  eventTimestamp
+) {
 
   const filePath =
     `tracks/${flightId}.json`;
@@ -99,18 +103,15 @@ async function fetchTrack(flightId, type) {
 
   if (fs.existsSync(filePath)) {
 
-    const stats =
-      fs.statSync(filePath);
-
     const ageMinutes =
-      (Date.now() - stats.mtimeMs) / 60000;
+      (Date.now() / 1000 - eventTimestamp) / 60;
 
     // ARRIVALS:
-    // refresh for first 30 mins after save
+    // refresh for first 30 mins after landing
 
     if (
       type === 'arrivals' &&
-      ageMinutes > 30
+      ageMinutes > 20
     ) {
 
       console.log(
@@ -124,11 +125,11 @@ async function fetchTrack(flightId, type) {
     }
 
     // DEPARTURES:
-    // refresh for first 20 mins after save
+    // refresh for first 20 mins after departure
 
     if (
       type === 'departures' &&
-      ageMinutes > 20
+      ageMinutes > 15
     ) {
 
       console.log(
@@ -169,7 +170,7 @@ async function fetchTrack(flightId, type) {
     await page.evaluate(() => document.body.innerText);
 
   // =====================================
-  // CLOUDFLARE DETECTION
+  // DETECT BLOCK PAGE
   // =====================================
 
   if (
@@ -192,7 +193,7 @@ async function fetchTrack(flightId, type) {
   JSON.parse(text);
 
   // =====================================
-  // SAVE TRACK
+  // SAVE FILE
   // =====================================
 
   fs.writeFileSync(filePath, text);
@@ -295,10 +296,11 @@ async function fetchTrack(flightId, type) {
 
         if (!flightId) continue;
 
-        await fetchTrack(
-          flightId,
-          'arrivals'
-        );
+       await fetchTrack(
+                          flightId,
+                          'arrivals',
+                          obj.flight.time.real.arrival
+                        );
 
       }
 
@@ -343,9 +345,10 @@ async function fetchTrack(flightId, type) {
         if (!flightId) continue;
 
         await fetchTrack(
-          flightId,
-          'departures'
-        );
+              flightId,
+              'departures',
+              obj.flight.time.real.departure
+            );
 
       }
 
