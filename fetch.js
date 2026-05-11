@@ -85,67 +85,133 @@ const ACCESS_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJmbGlnaHRyY
     }
 
     // -----------------------------
-    // FETCH TRACK
-    // -----------------------------
+// FETCH TRACK
+// -----------------------------
 
-    async function fetchTrack(flightId, type) {
+async function fetchTrack(flightId, type) {
 
-      const filePath =
-        `tracks/${flightId}.json`;
+  const filePath =
+    `tracks/${flightId}.json`;
 
-      // Skip if already exists
+  // =====================================
+  // REFRESH LOGIC
+  // =====================================
 
-      if (fs.existsSync(filePath)) {
+  if (fs.existsSync(filePath)) {
 
-        console.log(`SKIP ${type}: ${flightId}`);
+    const stats =
+      fs.statSync(filePath);
 
-        skippedCount++;
+    const ageMinutes =
+      (Date.now() - stats.mtimeMs) / 60000;
 
-        return;
+    // ARRIVALS:
+    // refresh for first 30 mins after save
 
-      }
+    if (
+      type === 'arrivals' &&
+      ageMinutes > 30
+    ) {
 
-      console.log(`FETCH ${type}: ${flightId}`);
+      console.log(
+        `SKIP ARRIVAL: ${flightId}`
+      );
 
-      const trackUrl =
-        `https://api.flightradar24.com/common/v1/flight-playback.json?flightId=${flightId}&timestamp=${ts}`;
+      skippedCount++;
 
-      await page.goto(trackUrl, {
-        waitUntil: 'networkidle2',
-        timeout: 60000
-      });
-
-      const text =
-        await page.evaluate(() => document.body.innerText);
-
-      // Detect Cloudflare block
-
-      if (
-        text.includes('Just a moment') ||
-        text.includes('<html')
-      ) {
-
-        console.log(`BLOCKED ${flightId}`);
-
-        return;
-
-      }
-
-      // Validate JSON
-
-      JSON.parse(text);
-
-      fs.writeFileSync(filePath, text);
-
-      console.log(`SAVED ${type}: ${flightId}`);
-
-      fetchedCount++;
-
-      // Delay between track requests
-
-      await new Promise(r => setTimeout(r, 3000));
+      return;
 
     }
+
+    // DEPARTURES:
+    // refresh for first 20 mins after save
+
+    if (
+      type === 'departures' &&
+      ageMinutes > 20
+    ) {
+
+      console.log(
+        `SKIP DEPARTURE: ${flightId}`
+      );
+
+      skippedCount++;
+
+      return;
+
+    }
+
+    console.log(
+      `REFRESH ${type}: ${flightId}`
+    );
+
+  } else {
+
+    console.log(
+      `FETCH ${type}: ${flightId}`
+    );
+
+  }
+
+  // =====================================
+  // FETCH PLAYBACK
+  // =====================================
+
+  const trackUrl =
+    `https://api.flightradar24.com/common/v1/flight-playback.json?flightId=${flightId}&timestamp=${ts}`;
+
+  await page.goto(trackUrl, {
+    waitUntil: 'networkidle2',
+    timeout: 60000
+  });
+
+  const text =
+    await page.evaluate(() => document.body.innerText);
+
+  // =====================================
+  // CLOUDFLARE DETECTION
+  // =====================================
+
+  if (
+    text.includes('Just a moment') ||
+    text.includes('<html')
+  ) {
+
+    console.log(
+      `BLOCKED ${flightId}`
+    );
+
+    return;
+
+  }
+
+  // =====================================
+  // VALIDATE JSON
+  // =====================================
+
+  JSON.parse(text);
+
+  // =====================================
+  // SAVE TRACK
+  // =====================================
+
+  fs.writeFileSync(filePath, text);
+
+  console.log(
+    `SAVED ${type}: ${flightId}`
+  );
+
+  fetchedCount++;
+
+  // =====================================
+  // DELAY
+  // =====================================
+
+  await new Promise(r =>
+    setTimeout(r, 3000)
+  );
+
+}
 
     // =========================================================
     // FETCH ARRIVALS SCHEDULES
