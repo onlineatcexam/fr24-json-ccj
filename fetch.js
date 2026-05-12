@@ -299,7 +299,7 @@ const ACCESS_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJmbGlnaHRyY
         if (!flightId) continue;
     
         // =====================================
-        // WAIT 5 MINUTES AFTER DEPARTURE
+        // WAIT 15 MINUTES AFTER DEPARTURE
         // =====================================
     
         const departureTime =
@@ -310,7 +310,7 @@ const ACCESS_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJmbGlnaHRyY
         const minutesSinceDeparture =
           (Date.now() / 1000 - departureTime) / 60;
     
-        if (minutesSinceDeparture < 5) {
+        if (minutesSinceDeparture < 15) {
     
           console.log(
             `WAIT DEPARTURE: ${flightId}`
