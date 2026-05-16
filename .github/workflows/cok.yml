@@ -34,7 +34,7 @@ jobs:
       - name: Run COK Fetch
         env:
           FR24_TOKEN: ${{ secrets.FR24_TOKEN }}
-        run: node fetch_cok.js
+        run: node fetch-cok.js
 
       - name: Commit and Push
         run: |
