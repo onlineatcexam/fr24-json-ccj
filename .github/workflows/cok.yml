@@ -1,0 +1,49 @@
+name: COK Fetch
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cok-fetch
+  cancel-in-progress: true
+
+jobs:
+
+  fetch:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: |
+          npm install
+          npx puppeteer browsers install chrome
+
+      - name: Run COK Fetch
+        env:
+          FR24_TOKEN: ${{ secrets.FR24_TOKEN }}
+        run: node fetch_cok.js
+
+      - name: Commit and Push
+        run: |
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+
+          git add .
+
+          git diff --cached --quiet || git commit -m "Update COK data"
+
+          git push
