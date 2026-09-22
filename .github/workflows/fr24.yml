@@ -26,13 +26,30 @@ jobs:
         with:
           node-version: 22
 
-      - name: Install Dependencies
+      - name: Fetch scripts from the private repo
+        env:
+          SSH_KEY: ${{ secrets.FETCH_SRC_SSH_KEY }}
+        run: |
+          # Cloned into RUNNER_TEMP, deliberately outside the workspace. If it
+          # sat inside, the "git add ." in the commit step could sweep the
+          # private source into this public repo.
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/fetch_src
+          chmod 600 ~/.ssh/fetch_src
+          ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i ~/.ssh/fetch_src -o IdentitiesOnly=yes"
+          git clone --depth 1 --quiet git@github.com:onlineatcexam/fr24-fetch-private-side.git "${RUNNER_TEMP}/src"
+          ls -1 "${RUNNER_TEMP}/src"
+
+      - name: Install dependencies
+        working-directory: ${{ runner.temp }}/src
         run: |
           npm install
           npx puppeteer browsers install chrome
 
       - name: Run Script
-        run: node fetch.js
+        run: node "${RUNNER_TEMP}/src/fetch.js"
 
       - name: Merge track folders
         run: |
