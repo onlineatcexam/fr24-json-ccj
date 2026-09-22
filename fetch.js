@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
-const ACCESS_TOKEN = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJmbGlnaHRyYWRhcjI0LmNvbSIsImV4cCI6MTc4MTAyNzI3OCwiaWF0IjoxNzc4NDM1Mjc4LCJlbWFpbCI6InNoYWhhYnBrQGdtYWlsLmNvbSIsInVzZXJJZCI6MTAzMjgyNzksImtleVNlc3Npb24iOiIiLCJzbCI6IkMiLCJhbCI6IjAiLCJwayI6IiJ9.qNtoYgZbQ3IhfrcDq5iyP_sZHXw5ox0H7RvAlaRrXZo';
+const ACCESS_TOKEN = process.env.FR24_TOKEN;
 
 
 (async () => {

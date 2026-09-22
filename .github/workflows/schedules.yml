@@ -1,4 +1,10 @@
-name: COK Fetch
+# Schedule-only airports (COK, TRV) in a single job.
+#
+# Replaces the old cok.yml. Triggered by an external cron service via the
+# workflow_dispatch API, so the file name is part of that URL -- renaming
+# this file means updating the cron job too.
+
+name: Schedules Fetch
 
 on:
   workflow_dispatch:
@@ -7,7 +13,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: cok-fetch
+  group: schedules-fetch
   cancel-in-progress: true
 
 jobs:
@@ -31,10 +37,10 @@ jobs:
           npm install
           npx puppeteer browsers install chrome
 
-      - name: Run COK Fetch
+      - name: Run schedules fetch
         env:
           FR24_TOKEN: ${{ secrets.FR24_TOKEN }}
-        run: node fetch-cok.js
+        run: node fetch-schedules.js
 
       - name: Commit and Push
         run: |
@@ -44,6 +50,6 @@ jobs:
 
           git add .
 
-          git diff --cached --quiet || git commit -m "Update COK data"
+          git diff --cached --quiet || git commit -m "Update schedule data"
 
           git push
