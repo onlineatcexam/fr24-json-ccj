@@ -43,11 +43,34 @@ jobs:
 
       - name: Commit and Push
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
 
           git add .
 
-          git diff --cached --quiet || git commit -m "update data"
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
 
-          git push
+          git commit -m "update data"
+
+          # The other workflow commits to this branch too, so main may have
+          # moved while we were fetching. Rebase our single data commit onto
+          # whatever landed and retry; only give up if it keeps moving.
+
+          for attempt in 1 2 3 4 5; do
+
+            if git pull --rebase origin "${GITHUB_REF_NAME}" && git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              echo "Pushed on attempt ${attempt}"
+              exit 0
+            fi
+
+            echo "Push attempt ${attempt} failed, retrying"
+            sleep 5
+
+          done
+
+          echo "Could not push after 5 attempts"
+          exit 1
