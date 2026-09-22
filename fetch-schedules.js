@@ -1,8 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
 
-const ACCESS_TOKEN =
-  process.env.FR24_TOKEN;
 
 // =====================================
 // AIRPORTS
@@ -56,7 +54,7 @@ const AIRPORTS = [
   ) {
 
     const url =
-      `https://api.flightradar24.com/common/v1/airport.json?code=${code}&plugin[]=&plugin-setting[schedule][mode]=${mode}&plugin-setting[schedule][timestamp]=${ts}&page=${pageNo}&limit=100&fleet=&token=${ACCESS_TOKEN}`;
+      `https://api.flightradar24.com/common/v1/airport.json?code=${code}&plugin[]=&plugin-setting[schedule][mode]=${mode}&plugin-setting[schedule][timestamp]=${ts}&page=${pageNo}&limit=100&fleet=`;
 
     console.log(
       `Fetching ${filename}`

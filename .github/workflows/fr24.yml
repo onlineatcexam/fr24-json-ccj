@@ -32,8 +32,6 @@ jobs:
           npx puppeteer browsers install chrome
 
       - name: Run Script
-        env:
-          FR24_TOKEN: ${{ secrets.FR24_TOKEN }}
         run: node fetch.js
 
       - name: Merge track folders

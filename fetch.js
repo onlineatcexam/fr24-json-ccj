@@ -1,6 +1,5 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs');
-const ACCESS_TOKEN = process.env.FR24_TOKEN;
 
 
 (async () => {
@@ -60,7 +59,7 @@ const ACCESS_TOKEN = process.env.FR24_TOKEN;
     async function fetchAndSave(mode, pageNo, filename) {
 
       const url =
-        `https://api.flightradar24.com/common/v1/airport.json?code=CCJ&plugin[]=&plugin-setting[schedule][mode]=${mode}&plugin-setting[schedule][timestamp]=${ts}&page=${pageNo}&limit=100&fleet=&token=${ACCESS_TOKEN}`;
+        `https://api.flightradar24.com/common/v1/airport.json?code=CCJ&plugin[]=&plugin-setting[schedule][mode]=${mode}&plugin-setting[schedule][timestamp]=${ts}&page=${pageNo}&limit=100&fleet=`;
 
       console.log(`Fetching ${filename}`);
 

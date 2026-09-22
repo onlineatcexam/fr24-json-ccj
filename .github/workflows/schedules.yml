@@ -38,8 +38,6 @@ jobs:
           npx puppeteer browsers install chrome
 
       - name: Run schedules fetch
-        env:
-          FR24_TOKEN: ${{ secrets.FR24_TOKEN }}
         run: node fetch-schedules.js
 
       - name: Commit and Push
