@@ -1,4 +1,4 @@
-name: FR24 Fetch
+name: CCJ Fetch (schedules + tracks)
 concurrency:
   group: fr24-fetch
   cancel-in-progress: true
